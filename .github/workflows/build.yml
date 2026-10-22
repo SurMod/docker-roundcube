@@ -49,8 +49,8 @@ jobs:
           docker run --rm --entrypoint sh ${{ env.IMAGE }}:inspect -c 'ls /usr/src/ 2>/dev/null' || true
           echo "=== DEBUG: find iniset ==="
           docker run --rm --entrypoint sh ${{ env.IMAGE }}:inspect -c 'find / -name "iniset.php" 2>/dev/null | head -5' || true
-          echo "=== DEBUG: find version ==="
-          docker run --rm --entrypoint sh ${{ env.IMAGE }}:inspect -c 'find / -name "version.php" -o -name "VERSIONS" 2>/dev/null | head -5' || true
+          echo "=== DEBUG: iniset.php content ==="
+          docker run --rm --entrypoint sh ${{ env.IMAGE }}:inspect -c 'grep -i version /usr/src/roundcubemail/program/include/iniset.php 2>/dev/null || echo "no version lines"' || true
           APP_VERSION=$(docker run --rm --entrypoint sh ${{ env.IMAGE }}:inspect -c 'cat /usr/src/roundcubemail/program/include/iniset.php 2>/dev/null | awk -F"'"'"'" "/RCUBE_VERSION/{print \$4}" || echo unknown')
           APP_VERSION=${APP_VERSION:-unknown}
           echo "php=${PHP_VERSION}" >> $GITHUB_OUTPUT
