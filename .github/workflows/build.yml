@@ -43,7 +43,7 @@ jobs:
         id: meta
         run: |
           PHP_VERSION=$(docker run --rm ${{ env.IMAGE }}:inspect php -r 'echo PHP_VERSION;')
-          APP_VERSION=$(docker run --rm ${{ env.IMAGE }}:inspect printenv ROUNDCUBEMAIL_VERSION)
+          APP_VERSION=$(docker run --rm --entrypoint sh ${{ env.IMAGE }}:inspect -c 'echo ${ROUNDCUBEMAIL_VERSION:-unknown}')
           echo "php=${PHP_VERSION}" >> $GITHUB_OUTPUT
           echo "app=${APP_VERSION}" >> $GITHUB_OUTPUT
           echo "Built: Roundcube ${APP_VERSION} / PHP ${PHP_VERSION}"
