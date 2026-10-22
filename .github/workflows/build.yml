@@ -43,7 +43,7 @@ jobs:
         id: meta
         run: |
           PHP_VERSION=$(docker run --rm ${{ env.IMAGE }}:inspect php -r 'echo PHP_VERSION;')
-          APP_VERSION=$(docker run --rm --entrypoint php ${{ env.IMAGE }}:inspect -r 'define("RCUBE_INSTALL_PATH", "/var/roundcube/htdocs/"); @include RCUBE_INSTALL_PATH."program/include/iniset.php"; echo defined("RCUBE_VERSION") ? RCUBE_VERSION : (getenv("ROUNDCUBEMAIL_VERSION") ?: "unknown");')
+          APP_VERSION=$(docker run --rm --entrypoint grep ${{ env.IMAGE }}:inspect -oP "RCUBE_VERSION', '\K[^']+" /var/www/html/program/include/iniset.php 2>/dev/null || echo unknown)
           echo "php=${PHP_VERSION}" >> $GITHUB_OUTPUT
           echo "app=${APP_VERSION}" >> $GITHUB_OUTPUT
           echo "Built: Roundcube ${APP_VERSION} / PHP ${PHP_VERSION}"
