@@ -2,6 +2,9 @@ name: Build & Push Roundcube image
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['Dockerfile']
   schedule:
     - cron: "0 6 * * 1"
 
@@ -28,12 +31,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          load: true
           no-cache: true
-          tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+          tags: ${{ env.IMAGE }}:inspect
+
+      - name: Extract version info
+        id: meta
+        run: |
+          PHP_VERSION=$(docker run --rm ${{ env.IMAGE }}:inspect php -r 'echo PHP_VERSION;')
+          APP_VERSION=$(docker run --rm ${{ env.IMAGE }}:inspect php -r "include '/var/roundcube/htdocs/program/include/iniset.php'; echo RCUBE_VERSION;" 2>/dev/null || docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' ${{ env.IMAGE }}:inspect | grep -i 'VERSION=' | head -1 | cut -d= -f2)
+          echo "php=${PHP_VERSION}" >> $GITHUB_OUTPUT
+          echo "app=${APP_VERSION}" >> $GITHUB_OUTPUT
+          echo "Built: Roundcube ${APP_VERSION} / PHP ${PHP_VERSION}"
+
+      - name: Tag and push
+        run: |
+          docker tag ${{ env.IMAGE }}:inspect ${{ env.IMAGE }}:latest
+          docker tag ${{ env.IMAGE }}:inspect ${{ env.IMAGE }}:${{ steps.meta.outputs.app }}
+          docker tag ${{ env.IMAGE }}:inspect ${{ env.IMAGE }}:${{ steps.meta.outputs.app }}-php${{ steps.meta.outputs.php }}
+          docker push ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}:${{ steps.meta.outputs.app }}
+          docker push ${{ env.IMAGE }}:${{ steps.meta.outputs.app }}-php${{ steps.meta.outputs.php }}
