@@ -1,4 +1,4 @@
-FROM roundcube/roundcubemail:1.7.x-apache
+FROM roundcube/roundcubemail:1.7.4-apache
 
 RUN apt-get update \
  && apt-get upgrade -y \
